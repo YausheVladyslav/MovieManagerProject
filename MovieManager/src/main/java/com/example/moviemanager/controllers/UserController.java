@@ -1,5 +1,6 @@
 package com.example.moviemanager.controllers;
 
+import com.example.moviemanager.requests.EditPasswordRequest;
 import com.example.moviemanager.requests.LoginRequest;
 import com.example.moviemanager.requests.RegisterUserRequest;
 import com.example.moviemanager.services.UserService;
@@ -36,6 +37,19 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<Void> login(@Valid @RequestBody LoginRequest request) {
         userService.login(request.getLogin(), request.getPassword());
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("{id}/edit-password")
+    public ResponseEntity<Void> editPassword(
+            @PathVariable long id,
+            @RequestBody EditPasswordRequest editRequest){
+        userService.editPassword(
+                id,
+                editRequest.getOldPassword(),
+                editRequest.getNewPassword(),
+                editRequest.getRepeatNewPassword()
+        );
         return ResponseEntity.ok().build();
     }
 }
