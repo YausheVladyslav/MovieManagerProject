@@ -1,13 +1,14 @@
 package com.example.moviemanager.controllers;
 
+import com.example.moviemanager.entities.UserEntity;
+import com.example.moviemanager.enums.Genre;
 import com.example.moviemanager.requests.AddMovieRequest;
-import com.example.moviemanager.requests.DeleteMovieRequest;
 import com.example.moviemanager.requests.EditMovieRequest;
-import com.example.moviemanager.requests.FindByGenreRequest;
 import com.example.moviemanager.responses.MovieResponse;
 import com.example.moviemanager.services.MovieService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -21,49 +22,66 @@ public class MovieController {
     private final MovieService service;
 
     @PostMapping("/add")
-    public ResponseEntity<Void> addMovie(@Valid @RequestBody AddMovieRequest request) {
-        service.addMovie(request.getName(), request.getGenre(), request.getYear());
+    public ResponseEntity<Void> addMovie(@Valid
+                                         @RequestBody AddMovieRequest request,
+                                         @AuthenticationPrincipal UserEntity entity) {
+        service.addMovie(
+                request.getName(),
+                request.getGenre(),
+                request.getYear(),
+                entity.getUserId()
+        );
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/edit/{id}")
+    @PutMapping("{id}/edit")
     public ResponseEntity<Void> editMovie(
-            @PathVariable String id,
-            @Valid @RequestBody EditMovieRequest request
+            @PathVariable long id,
+            @Valid @RequestBody EditMovieRequest request,
+            @AuthenticationPrincipal UserEntity user
     ) {
         service.editMovie(
                 id,
                 request.getNewName(),
                 request.getGenre(),
-                request.getYear());
+                request.getYear(),
+        user.getUserId());
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<Void> deleteMovie(@PathVariable String id) {
-        service.deleteMovie(id);
+    @DeleteMapping("{id}/delete")
+    public ResponseEntity<Void> deleteMovie(
+            @PathVariable long id,
+            @AuthenticationPrincipal UserEntity user
+            ) {
+        service.deleteMovie(id, user.getUserId());
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/full-list")
-    public ResponseEntity<List<MovieResponse>> movieList() {
-        return ResponseEntity.ok(service.movieList());
+    @GetMapping("/list")
+    public ResponseEntity<List<MovieResponse>> movieList(
+            @AuthenticationPrincipal UserEntity user
+    ) {
+        return ResponseEntity.ok(service.movieList(user.getUserId()));
     }
 
-    @GetMapping("/genre-list")
+    @GetMapping("/list/{genre}")
     public ResponseEntity<List<MovieResponse>> genreList(
-            @Valid @RequestBody FindByGenreRequest request) {
-        return ResponseEntity.ok(service.moviesGenre(request.getGenre()));
+            @PathVariable Genre genre,
+            @AuthenticationPrincipal UserEntity user) {
+        return ResponseEntity.ok(service.moviesGenre(genre.toString(), user.getUserId()));
     }
 
     @GetMapping("/random")
-    public ResponseEntity<MovieResponse> randomizer() {
-        return ResponseEntity.ok(service.movieRandomizer());
+    public ResponseEntity<MovieResponse> randomizer(@AuthenticationPrincipal UserEntity user) {
+        return ResponseEntity.ok(service.movieRandomizer(user.getUserId()));
     }
 
-    @PutMapping("/watched/{id}")
-    public ResponseEntity<Void> editWatched(@PathVariable String id) {
-        service.watched(id);
+    @PutMapping("{id}/watched")
+    public ResponseEntity<Void> editWatched(
+            @PathVariable long id,
+            @AuthenticationPrincipal UserEntity user) {
+        service.watched(id, user.getUserId());
         return ResponseEntity.ok().build();
     }
 }

@@ -2,18 +2,16 @@ package com.example.moviemanager.requests;
 
 import lombok.Getter;
 
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 
 @Getter
 public class AddMovieRequest {
 
     @NotBlank
+    @Size(min = 2, max = 64)
     private String name;
     @NotBlank
     private String genre;
-    private String genreSecond;
-    private String genreThird;
     private int year;
 }

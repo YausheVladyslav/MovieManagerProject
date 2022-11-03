@@ -25,13 +25,13 @@ public class UserService implements UserDetailsService {
 
     private static final int PASSWORD_LENGTH = 8;
 
-    private final UserRepository repository;
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationConfiguration authenticationConfiguration;
 
     @Override
     public UserDetails loadUserByUsername(String nickname) throws UsernameNotFoundException {
-        Optional<UserEntity> userEntity = repository.findByNickname(nickname);
+        Optional<UserEntity> userEntity = userRepository.findByNickname(nickname);
         if (userEntity.isEmpty()) {
             throw new UsernameNotFoundException("User with such nickname not found");
         }
@@ -39,7 +39,7 @@ public class UserService implements UserDetailsService {
     }
 
     private void userExists(String nickname) {
-        Optional<UserEntity> userEntity = repository.findByNickname(nickname);
+        Optional<UserEntity> userEntity = userRepository.findByNickname(nickname);
         if (userEntity.isPresent()) {
             throw new UsernameNotFoundException("User with such nickname already exist");
         }
@@ -55,11 +55,9 @@ public class UserService implements UserDetailsService {
         user.setFirstName(firstName);
         user.setSecondName(secondName);
         user.setNickname(nickname);
-        if (password.length() < PASSWORD_LENGTH) {
-            throw new BadRequestException("Password should be at least 8 symbols");
-        } else if (password.equals(repeatPassword)) {
+        if (password.equals(repeatPassword)) {
             user.setPassword(passwordEncoder.encode(password));
-            repository.save(user);
+            userRepository.save(user);
         } else {
             throw new BadRequestException("incorrect password");
         }
@@ -73,5 +71,19 @@ public class UserService implements UserDetailsService {
         Authentication authentication = authenticationManager.authenticate(authToken);
         SecurityContext securityContext = SecurityContextHolder.getContext();
         securityContext.setAuthentication(authentication);
+    }
+
+    public void editPassword(long id, String oldPassword, String newPassword, String repeatNewPassword) {
+        UserEntity user = userRepository.findById(id).get();
+        if (passwordEncoder.matches(user.getPassword(), oldPassword)) {
+            if (newPassword.equals(repeatNewPassword)) {
+                user.setPassword(passwordEncoder.encode(newPassword));
+                userRepository.save(user);
+            } else {
+                throw new BadRequestException("incorrect password");
+            }
+        } else {
+            throw new BadRequestException("incorrect password");
+        }
     }
 }
