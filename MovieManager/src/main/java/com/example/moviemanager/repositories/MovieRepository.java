@@ -8,9 +8,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
 public interface MovieRepository extends JpaRepository<MovieEntity, Long> {
 
-    Optional<MovieEntity> findByName(String name);
+    MovieEntity findByName(String name);
+
     List<MovieEntity> findAllByGenre(Genre genre);
 }

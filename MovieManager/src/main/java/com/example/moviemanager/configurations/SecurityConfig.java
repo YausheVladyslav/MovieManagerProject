@@ -1,4 +1,4 @@
-package com.example.moviemanager.configuration;
+package com.example.moviemanager.configurations;
 
 import com.example.moviemanager.handlers.CustomAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
@@ -26,11 +26,11 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .authorizeHttpRequests((auth) -> auth
-                        .antMatchers("/registration", "/login", "/", "/error").permitAll()
-                        .anyRequest().authenticated()
+                        .antMatchers("/movie/**").authenticated()
+                        .anyRequest().permitAll()
                 )
                 .logout()
-                .logoutUrl("/logout").logoutSuccessUrl("/")
+                .logoutUrl("/logout").logoutSuccessUrl("/account")
                 .permitAll()
                 .and()
                 .exceptionHandling().authenticationEntryPoint(customPoint);
