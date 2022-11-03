@@ -26,7 +26,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .authorizeHttpRequests((auth) -> auth
-                        .antMatchers("/movie/**").authenticated()
+                        .antMatchers("/movie/**", "/edit-password").authenticated()
                         .anyRequest().permitAll()
                 )
                 .logout()

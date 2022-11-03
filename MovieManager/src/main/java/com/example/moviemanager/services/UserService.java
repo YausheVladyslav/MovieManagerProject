@@ -75,7 +75,7 @@ public class UserService implements UserDetailsService {
 
     public void editPassword(long id, String oldPassword, String newPassword, String repeatNewPassword) {
         UserEntity user = userRepository.findById(id).get();
-        if (passwordEncoder.matches(user.getPassword(), oldPassword)) {
+        if (passwordEncoder.matches(oldPassword, user.getPassword())) {
             if (newPassword.equals(repeatNewPassword)) {
                 user.setPassword(passwordEncoder.encode(newPassword));
                 userRepository.save(user);
