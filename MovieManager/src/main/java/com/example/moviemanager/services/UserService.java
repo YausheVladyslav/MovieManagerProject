@@ -86,4 +86,8 @@ public class UserService implements UserDetailsService {
             throw new BadRequestException("incorrect password");
         }
     }
+
+    public void deleteAccount(UserEntity user){
+        userRepository.delete(user);
+    }
 }

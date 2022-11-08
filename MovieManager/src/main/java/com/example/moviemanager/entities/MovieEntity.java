@@ -26,4 +26,7 @@ public class MovieEntity {
     @UpdateTimestamp
     private LocalDate updatedOn;
     private boolean watched;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private UserEntity user;
 }

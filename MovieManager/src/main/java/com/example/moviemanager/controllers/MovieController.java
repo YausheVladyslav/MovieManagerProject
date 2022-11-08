@@ -29,7 +29,7 @@ public class MovieController {
                 request.getName(),
                 request.getGenre(),
                 request.getYear(),
-                entity.getUserId()
+                entity
         );
         return ResponseEntity.ok().build();
     }
@@ -45,7 +45,8 @@ public class MovieController {
                 request.getNewName(),
                 request.getGenre(),
                 request.getYear(),
-        user.getUserId());
+                user
+        );
         return ResponseEntity.ok().build();
     }
 
@@ -53,8 +54,8 @@ public class MovieController {
     public ResponseEntity<Void> deleteMovie(
             @PathVariable long id,
             @AuthenticationPrincipal UserEntity user
-            ) {
-        service.deleteMovie(id, user.getUserId());
+    ) {
+        service.deleteMovie(id, user);
         return ResponseEntity.ok().build();
     }
 
@@ -62,26 +63,26 @@ public class MovieController {
     public ResponseEntity<List<MovieResponse>> movieList(
             @AuthenticationPrincipal UserEntity user
     ) {
-        return ResponseEntity.ok(service.movieList(user.getUserId()));
+        return ResponseEntity.ok(service.movieList(user));
     }
 
     @GetMapping("/list/{genre}")
     public ResponseEntity<List<MovieResponse>> genreList(
             @PathVariable Genre genre,
             @AuthenticationPrincipal UserEntity user) {
-        return ResponseEntity.ok(service.moviesGenre(genre.toString(), user.getUserId()));
+        return ResponseEntity.ok(service.moviesGenre(genre.toString(), user));
     }
 
     @GetMapping("/random")
     public ResponseEntity<MovieResponse> randomizer(@AuthenticationPrincipal UserEntity user) {
-        return ResponseEntity.ok(service.movieRandomizer(user.getUserId()));
+        return ResponseEntity.ok(service.movieRandomizer(user));
     }
 
     @PutMapping("{id}/watched")
     public ResponseEntity<Void> editWatched(
             @PathVariable long id,
             @AuthenticationPrincipal UserEntity user) {
-        service.watched(id, user.getUserId());
+        service.watched(id, user);
         return ResponseEntity.ok().build();
     }
 }

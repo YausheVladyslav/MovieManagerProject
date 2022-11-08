@@ -21,7 +21,7 @@ public class UserEntity implements UserDetails {
     private String secondName;
     private String nickname;
     private String password;
-    @OneToMany(cascade = CascadeType.REFRESH, fetch = FetchType.LAZY)
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id")
     private List<MovieEntity> movies;
 

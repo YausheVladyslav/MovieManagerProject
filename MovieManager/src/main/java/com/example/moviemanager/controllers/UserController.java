@@ -1,11 +1,14 @@
 package com.example.moviemanager.controllers;
 
+import com.example.moviemanager.entities.UserEntity;
 import com.example.moviemanager.requests.EditPasswordRequest;
 import com.example.moviemanager.requests.LoginRequest;
 import com.example.moviemanager.requests.RegisterUserRequest;
+import com.example.moviemanager.responses.RegisterAndDeleteResponse;
 import com.example.moviemanager.services.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -23,7 +26,7 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Void> registration(@Valid @RequestBody RegisterUserRequest request) {
+    public ResponseEntity<RegisterAndDeleteResponse> registration(@Valid @RequestBody RegisterUserRequest request) {
         userService.saveUser(
                 request.getFirstName(),
                 request.getSecondName(),
@@ -31,7 +34,12 @@ public class UserController {
                 request.getPassword(),
                 request.getRepeatPassword()
         );
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(new RegisterAndDeleteResponse(
+                "Registered User:",
+                request.getFirstName(),
+                request.getSecondName(),
+                request.getNickname()
+        ));
     }
 
     @PostMapping("/login")
@@ -43,7 +51,7 @@ public class UserController {
     @PutMapping("{id}/edit-password")
     public ResponseEntity<Void> editPassword(
             @PathVariable long id,
-            @RequestBody EditPasswordRequest editRequest){
+            @RequestBody EditPasswordRequest editRequest) {
         userService.editPassword(
                 id,
                 editRequest.getOldPassword(),
@@ -52,4 +60,17 @@ public class UserController {
         );
         return ResponseEntity.ok().build();
     }
+
+    @DeleteMapping("/delete-account")
+    public ResponseEntity<RegisterAndDeleteResponse> deleteAccount(@AuthenticationPrincipal UserEntity user) {
+        RegisterAndDeleteResponse response = new RegisterAndDeleteResponse(
+                "Deleted User:",
+                user.getFirstName(),
+                user.getSecondName(),
+                user.getNickname()
+        );
+        userService.deleteAccount(user);
+        return ResponseEntity.ok(response);
+    }
+
 }
