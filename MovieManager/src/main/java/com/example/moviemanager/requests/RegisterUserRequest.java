@@ -3,6 +3,8 @@ package com.example.moviemanager.requests;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
@@ -25,4 +27,9 @@ public class RegisterUserRequest {
     @NotBlank
     @Size(min = 8, message = "Password should be at least 8 symbols")
     private String repeatPassword;
+    @NotBlank
+    private String question;
+    @NotBlank
+    @Size(min = 2, max = 64)
+    private String answer;
 }

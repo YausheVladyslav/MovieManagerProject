@@ -16,4 +16,5 @@ public class MovieResponse {
     private int year;
     private LocalDate createdOn;
     private boolean watched;
+    private int rating;
 }

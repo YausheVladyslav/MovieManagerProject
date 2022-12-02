@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Random;
 
 @Service
@@ -24,11 +23,9 @@ public class MovieService {
     private final UserRepository userRepository;
 
     @Transactional
-    public void addMovie(String name, String genre, int year, Long id) {
+    public void addMovie(String name, String genre, int year, int rating, UserEntity user) {
         MovieEntity movie = new MovieEntity();
-        UserEntity user = userRepository.findById(id).get();
-        List<MovieEntity> movieList = user.getMovies();
-        for (MovieEntity films : movieList) {
+        for (MovieEntity films : user.getMovies()) {
             if (films.getName().equals(name)) {
                 throw new BadRequestException("This movie already added");
             }
@@ -37,48 +34,75 @@ public class MovieService {
         movie.setGenre(Genre.valueOf(genre));
         movie.setYear(year);
         movie.setWatched(false);
-        movieList.add(movie);
-        user.setMovies(movieList);
+        movie.setRating(rating);
+        user.getMovies().add(movie);
         movieRepository.save(movie);
         userRepository.save(user);
     }
 
-    public void watched(long movieId, long userId) {
+    @Transactional
+    public void watched(long movieId, UserEntity user) {
         MovieEntity movieById = movieRepository.findById(movieId).get();
-        List<MovieEntity> usersMovieList = userRepository.findById(userId).get().getMovies();
-        for (MovieEntity movies : usersMovieList) {
-            if (movieById.equals(movies)) {
-                movies.setWatched(!movies.isWatched());
-                movieRepository.save(movieById);
+        if (movieById.getUser().getNickname().equals(user.getNickname())) {
+            List<MovieEntity> movieList = user.getMovies();
+            for (MovieEntity movie : movieList) {
+                if (movie.getId() == movieId) {
+                    movie.setWatched(!movie.isWatched());
+                }
             }
+            userRepository.save(user);
         }
     }
 
-    public void editMovie(long movieId, String newName, String newGenre, int newYear, long userId) {
+    @Transactional
+    public void editRating(long movieId, int rating, UserEntity user) {
         MovieEntity movieById = movieRepository.findById(movieId).get();
-        List<MovieEntity> movies = userRepository.findById(userId).get().getMovies();
-        for (MovieEntity movie : movies) {
-            if (movie.equals(movieById)) {
-                movieById.setName(newName);
-                movieById.setGenre(Genre.valueOf(newGenre));
-                movieById.setYear(newYear);
-                movieRepository.save(movieById);
+        if (movieById.getUser().getNickname().equals(user.getNickname())) {
+            List<MovieEntity> movieList = user.getMovies();
+            for (MovieEntity movie : movieList) {
+                if (movie.getId() == movieId) {
+                    movie.setRating(rating);
+                }
             }
+            userRepository.save(user);
         }
     }
 
-    public void deleteMovie(long movieId, long userId) {
-        MovieEntity deleteMovie = movieRepository.findById(movieId).get();
-        List<MovieEntity> movies = userRepository.findById(userId).get().getMovies();
-        for (MovieEntity movie : movies) {
-            if (movie.equals(deleteMovie)) {
-                movieRepository.deleteById(movieId);
+    @Transactional
+    public void editMovie(long movieId, String newName, String newGenre, int newYear, int rating, UserEntity user) {
+        MovieEntity movieById = movieRepository.findById(movieId).get();
+        if (movieById.getUser().getNickname().equals(user.getNickname())) {
+            List<MovieEntity> movieList = user.getMovies();
+            for (MovieEntity movie : movieList) {
+                if (movie.getId() == movieId) {
+                    movie.setName(newName);
+                    movie.setGenre(Genre.valueOf(newGenre));
+                    movie.setYear(newYear);
+                    movie.setWatched(false);
+                    movie.setRating(rating);
+                }
             }
+            userRepository.save(user);
         }
     }
 
-    public List<MovieResponse> movieList(Long userId) {
-        UserEntity user = userRepository.findById(userId).get();
+    @Transactional
+    public void deleteMovie(long movieId, UserEntity user) {
+        MovieEntity movieById = movieRepository.findById(movieId).get();
+        if (movieById.getUser().getNickname().equals(user.getNickname())) {
+            List<MovieEntity> movieList = user.getMovies();
+            for (int i = 0; i < movieList.size(); i++) {
+                if (movieList.get(i).getId() == movieById.getId()) {
+                    movieList.remove(i);
+                }
+            }
+        }
+        userRepository.save(user);
+        movieRepository.deleteById(movieId);
+    }
+
+
+    public List<MovieResponse> movieList(UserEntity user) {
         List<MovieEntity> movieList = user.getMovies();
         List<MovieResponse> response = new ArrayList<>();
         for (MovieEntity movie : movieList) {
@@ -87,30 +111,30 @@ public class MovieService {
                     movie.getGenre().toString(),
                     movie.getYear(),
                     movie.getCreatedOn(),
-                    movie.isWatched()));
+                    movie.isWatched(),
+                    movie.getRating()));
         }
         return response;
     }
 
-    public List<MovieResponse> moviesGenre(String genre, long userId) {
-        UserEntity user = userRepository.findById(userId).get();
-        List<MovieEntity> moviesList = user.getMovies();
+    public List<MovieResponse> moviesGenre(String genre, UserEntity user) {
         List<MovieResponse> response = new ArrayList<>();
-        for (MovieEntity movie : moviesList) {
+        for (MovieEntity movie : user.getMovies()) {
             if (movie.getGenre().toString().equals(genre)) {
                 response.add(new MovieResponse(
                         movie.getName(),
                         movie.getGenre().toString(),
                         movie.getYear(),
                         movie.getCreatedOn(),
-                        movie.isWatched()));
+                        movie.isWatched(),
+                        movie.getRating()));
             }
         }
         return response;
     }
 
-    public MovieResponse movieRandomizer(long userId) {
-        List<MovieEntity> movieList = userRepository.findById(userId).get().getMovies();
+    public MovieResponse movieRandomizer(UserEntity user) {
+        List<MovieEntity> movieList = user.getMovies();
         if (movieList.size() != 0) {
             Random random = new Random();
             int numberOfMovie = random.nextInt(movieList.size());
@@ -119,7 +143,8 @@ public class MovieService {
                     movieList.get(numberOfMovie).getGenre().toString(),
                     movieList.get(numberOfMovie).getYear(),
                     movieList.get(numberOfMovie).getCreatedOn(),
-                    movieList.get(numberOfMovie).isWatched());
+                    movieList.get(numberOfMovie).isWatched(),
+                    movieList.get(numberOfMovie).getRating());
         } else {
             throw new BadRequestException("No saved movies");
         }
