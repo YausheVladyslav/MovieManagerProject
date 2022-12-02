@@ -3,7 +3,6 @@ package com.example.moviemanager.requests;
 import lombok.Getter;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
 
 @Getter
 public class EditPasswordRequest {
