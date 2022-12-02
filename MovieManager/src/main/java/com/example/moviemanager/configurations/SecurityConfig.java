@@ -26,13 +26,13 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .authorizeHttpRequests((auth) -> auth
-                        .antMatchers("/movie/**", "/edit-password", "/delete-account").authenticated()
+                        .antMatchers(
+                                "/movie/**",
+                                "/edit-password",
+                                "/delete-account",
+                                "/account/logout").authenticated()
                         .anyRequest().permitAll()
                 )
-                .logout()
-                .logoutUrl("/logout").logoutSuccessUrl("/account")
-                .permitAll()
-                .and()
                 .exceptionHandling().authenticationEntryPoint(customPoint);
         return http.build();
     }

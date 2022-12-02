@@ -1,5 +1,6 @@
 package com.example.moviemanager.entities;
 
+import com.example.moviemanager.enums.SecretQuestions;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
@@ -21,7 +22,10 @@ public class UserEntity implements UserDetails {
     private String secondName;
     private String nickname;
     private String password;
-    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @Enumerated(EnumType.STRING)
+    private SecretQuestions question;
+    private String answer;
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.MERGE, orphanRemoval = true)
     @JoinColumn(name = "user_id")
     private List<MovieEntity> movies;
 

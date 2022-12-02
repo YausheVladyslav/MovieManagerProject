@@ -1,6 +1,7 @@
 package com.example.moviemanager.services;
 
 import com.example.moviemanager.entities.UserEntity;
+import com.example.moviemanager.enums.SecretQuestions;
 import com.example.moviemanager.exceptions.BadRequestException;
 import com.example.moviemanager.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -11,19 +12,21 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class UserService implements UserDetailsService {
-
-    private static final int PASSWORD_LENGTH = 8;
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -49,7 +52,9 @@ public class UserService implements UserDetailsService {
                          String secondName,
                          String nickname,
                          String password,
-                         String repeatPassword) {
+                         String repeatPassword,
+                         String question,
+                         String answer) {
         userExists(nickname);
         UserEntity user = new UserEntity();
         user.setFirstName(firstName);
@@ -57,10 +62,12 @@ public class UserService implements UserDetailsService {
         user.setNickname(nickname);
         if (password.equals(repeatPassword)) {
             user.setPassword(passwordEncoder.encode(password));
-            userRepository.save(user);
         } else {
-            throw new BadRequestException("incorrect password");
+            throw new BadRequestException("Incorrect password");
         }
+        user.setQuestion(SecretQuestions.valueOf(question));
+        user.setAnswer(passwordEncoder.encode(answer));
+        userRepository.save(user);
     }
 
     @SneakyThrows
@@ -73,6 +80,13 @@ public class UserService implements UserDetailsService {
         securityContext.setAuthentication(authentication);
     }
 
+    public void customLogout(HttpServletRequest request, HttpServletResponse response) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null) {
+            new SecurityContextLogoutHandler().logout(request, response, auth);
+        }
+    }
+
     public void editPassword(long id, String oldPassword, String newPassword, String repeatNewPassword) {
         UserEntity user = userRepository.findById(id).get();
         if (passwordEncoder.matches(oldPassword, user.getPassword())) {
@@ -80,14 +94,35 @@ public class UserService implements UserDetailsService {
                 user.setPassword(passwordEncoder.encode(newPassword));
                 userRepository.save(user);
             } else {
-                throw new BadRequestException("incorrect password");
+                throw new BadRequestException("Incorrect password");
             }
         } else {
-            throw new BadRequestException("incorrect password");
+            throw new BadRequestException("Incorrect password");
         }
     }
 
-    public void deleteAccount(UserEntity user){
+    public void deleteAccount(HttpServletRequest request, HttpServletResponse response, UserEntity user) {
         userRepository.delete(user);
+        customLogout(request, response);
+    }
+
+    public void resetPassword(String nickname,
+                              String currentAnswer,
+                              String password,
+                              String repeatPassword) {
+        Optional<UserEntity> foundUser = userRepository.findByNickname(nickname);
+        if (foundUser.isPresent()) {
+            UserEntity user = foundUser.get();
+            if (passwordEncoder.matches(currentAnswer, user.getAnswer())) {
+                if (password.equals(repeatPassword)) {
+                    user.setPassword(passwordEncoder.encode(password));
+                    userRepository.save(user);
+                } else {
+                    throw new BadRequestException("Incorrect password");
+                }
+            } else {
+                throw new BadRequestException("Incorrect answer");
+            }
+        }
     }
 }

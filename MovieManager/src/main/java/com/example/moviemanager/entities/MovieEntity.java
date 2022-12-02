@@ -1,6 +1,7 @@
 package com.example.moviemanager.entities;
 
 import com.example.moviemanager.enums.Genre;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
@@ -11,6 +12,7 @@ import java.time.LocalDate;
 
 @Getter
 @Setter
+@EqualsAndHashCode
 @Entity(name = "movies")
 public class MovieEntity {
 
@@ -26,6 +28,7 @@ public class MovieEntity {
     @UpdateTimestamp
     private LocalDate updatedOn;
     private boolean watched;
+    private int rating;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private UserEntity user;
